@@ -235,7 +235,7 @@ class KDT:
             if(node.is_leaf()):
                 node_rets = node.calc_dists(vec)
                 for d, v in node_rets:
-                    add_ret((-d, v, node.name))
+                    add_ret((-d, tuple(v), node.name))
             else:
                 for recall_dist, child in node.calc_branch(vec):
                     push_node(recall_dist, child)
@@ -286,31 +286,3 @@ class KDT:
         return dist < eps
     def __contains__(self,vec):
         return self.lock_do(self._contains,vec)
-
-if(__name__ == '__main__'):
-    for i in range(10):
-        print(rand_id())
-
-    dim = 5
-    pwd = path.dirname(__file__)
-    tmppth = path.join(pwd, '%d' % dim)
-
-    def rand_vec(dim):
-        return [random.random() for i in range(dim)]
-
-    a = KDT(tmppth, max_cluster=50)
-    for i in range(100):
-        v = rand_vec(dim)
-        a._add_vec(v)
-        # print(a._contains(v))
-
-    def stmt():
-        v = rand_vec(dim)
-        a._get_nn(v, 10)
-    v = rand_vec(dim)
-
-    print(a._get_nn(v, 1), v in a)
-    a._add_vec(v)
-    print(a._get_nn(v, 1), v in a)
-    import timeit
-    print(timeit.timeit(stmt=stmt, number=10000))

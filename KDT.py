@@ -172,14 +172,16 @@ class KDT:
         self.save_dir = save_dir
         self.max_cluster = max_cluster
         self.lck = Lock()
-    def lock_do(self,func,*args,**kwargs):
+
+    def lock_do(self, func, *args, **kwargs):
         self.lck.acquire()
         try:
-            ret=func(*args,**kwargs)
+            ret = func(*args, **kwargs)
         except Exception as e:
             self.lck.release()
             raise e
         self.lck.release()
+        return ret
     def _empty(self):
         return not path.exists(self._node_pth('root'))
 
@@ -196,6 +198,9 @@ class KDT:
             return self.nodes[uid]
         else:
             raise KeyError(uid)
+
+    def get_nn(self, vec, n, search_k=64):
+        return self.lock_do(self._get_nn, vec, n, search_k)
 
     def _get_nn(self, vec, n, search_k=64):
         root = self._get_node('root')
@@ -265,17 +270,8 @@ class KDT:
                 lc.save_path = self._node_pth(lc.name)
                 rc.save_path = self._node_pth(rc.name)
 
-    '''def _contains(self, vec):
-        if(self._empty()):
-            return False
-        else:
-            u = self._get_node('root')
-            while(not u.is_leaf()):
-                _, child = min(u.calc_branch(vec))
-                u = self._get_node(child)
-            node_rets = u.calc_dists(vec)
-            dist = min(node_rets)[0]
-            return dist < eps'''
+    def add_vec(self, vec):
+        return self.lock_do(self._add_vec, vec)
 
     def _contains(self, vec):
         if(self._empty()):
@@ -284,5 +280,6 @@ class KDT:
         dist, vec, node = nn[0]
         print(dist, eps)
         return dist < eps
-    def __contains__(self,vec):
-        return self.lock_do(self._contains,vec)
+
+    def __contains__(self, vec):
+        return self.lock_do(self._contains, vec)
